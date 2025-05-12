@@ -1,6 +1,6 @@
 {
   "name": "@mmanela/marked-terminal",
-  "version": "7.3.1",
+  "version": "7.3.2",
   "description": "A custom render for marked to output to the Terminal",
   "main": "./index.cjs",
   "browser": "./index.js",
