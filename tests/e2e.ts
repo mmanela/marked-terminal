@@ -5,15 +5,17 @@ import Renderer from '../index.js';
 import marked, { resetMarked } from './_marked.js';
 import { fileURLToPath } from 'url';
 
-var identity = function (o) {
+type IdentityFn = (o: any) => any;
+
+const identity: IdentityFn = function (o) {
   return o;
 };
 
-function stripTermEsc(str) {
+function stripTermEsc(str: string): string {
   return str.replace(/\u001b\[\d{1,2}m/g, '');
 }
 
-function getFixtureFile(fileName) {
+function getFixtureFile(fileName: string): string {
   return readFileSync(
     resolve(dirname(fileURLToPath(import.meta.url)), 'fixtures/', fileName),
     {
@@ -22,7 +24,7 @@ function getFixtureFile(fileName) {
   );
 }
 
-var opts = [
+const opts = [
   'code',
   'blockquote',
   'html',
@@ -40,13 +42,17 @@ var opts = [
   'href'
 ];
 
-var defaultOptions = {};
+interface RendererOptions {
+  [key: string]: any;
+}
+
+const defaultOptions: RendererOptions = {};
 opts.forEach(function (opt) {
   defaultOptions[opt] = identity;
 });
 
-function markup(str) {
-  var r = new Renderer(defaultOptions);
+function markup(str: string): string {
+  const r = new Renderer(defaultOptions);
   return stripTermEsc(marked(str, { renderer: r }));
 }
 

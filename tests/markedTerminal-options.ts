@@ -2,11 +2,13 @@ import { notEqual, equal } from 'assert';
 import { markedTerminal } from '../index.js';
 import marked, { resetMarked } from './_marked.js';
 
-var identity = function (o) {
+type IdentityFn = (o: any) => any;
+
+const identity: IdentityFn = function (o) {
   return o;
 };
 
-var opts = [
+const opts = [
   'code',
   'blockquote',
   'html',
@@ -24,7 +26,14 @@ var opts = [
   'href'
 ];
 
-var defaultOptions = {};
+interface MarkedTerminalOptions {
+  [key: string]: any;
+  emoji?: boolean;
+  tab?: number | string;
+  image?: (text: string, options?: any) => string;
+}
+
+const defaultOptions: MarkedTerminalOptions = {};
 opts.forEach(function (opt) {
   defaultOptions[opt] = identity;
 });
@@ -38,7 +47,7 @@ describe('Options', function () {
 
   it('should not translate emojis', function () {
     marked.use(markedTerminal(defaultOptions));
-    var markdownText = 'Some :emoji:';
+    const markdownText = 'Some :emoji:';
 
     notEqual(
       marked(markdownText).indexOf(':emoji:'),
@@ -47,58 +56,58 @@ describe('Options', function () {
   });
 
   it('should change tabs by space size', function () {
-    var options = Object.assign({}, defaultOptions, { tab: 4 });
+    const options = Object.assign({}, defaultOptions, { tab: 4 });
     marked.use(markedTerminal(options));
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText), '    Blockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText), '    * List Item\n\n');
   });
 
   it('should use default tabs if passing not supported string', function () {
-    var options = Object.assign({}, defaultOptions, { tab: 'dsakdskajhdsa' });
+    const options = Object.assign({}, defaultOptions, { tab: 'dsakdskajhdsa' });
     marked.use(markedTerminal(options));
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText), '    Blockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText), '    * List Item\n\n');
   });
 
   it('should change tabs by allowed characters', function () {
-    var options = Object.assign({}, defaultOptions, { tab: '\t' });
+    const options = Object.assign({}, defaultOptions, { tab: '\t' });
     marked.use(markedTerminal(options));
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText), '\tBlockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText), '\t* List Item\n\n');
   });
 
   it('should support mulitple tab characters', function () {
-    var options = Object.assign({}, defaultOptions, { tab: '\t\t' });
+    const options = Object.assign({}, defaultOptions, { tab: '\t\t' });
     marked.use(markedTerminal(options));
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText), '\t\tBlockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText), '\t\t* List Item\n\n');
   });
 
   it('should support overriding image handling', function () {
-    var options = Object.assign({}, defaultOptions, {
-      image: function () {
+    const options = Object.assign({}, defaultOptions, {
+      image: function (): string {
         return 'IMAGE';
       }
     });
     marked.use(markedTerminal(options));
 
-    var text = `
+    const text = `
 # Title
 ![Alt text](./img.jpg)`;
     equal(

@@ -2,10 +2,10 @@ import { equal } from 'assert';
 import Renderer from '../index.js';
 
 describe('Terminal escape', function () {
-  var r = new Renderer();
+  const r = new Renderer();
 
   it('should not be included in text length', function () {
-    var tokens = [
+    const tokens = [
       '\u001b[38;5;128mfoo\u001b[0m',
       '\u001b[33mfoo\u001b[22m\u001b[24m\u001b[39m',
       '\u001b[35m\u001b[4m\u001b[1mfoo',

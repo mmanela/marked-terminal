@@ -2,15 +2,17 @@ import { equal, notEqual } from 'assert';
 import { markedTerminal } from '../index.js';
 import marked, { resetMarked } from './_marked.js';
 
-let identity = function (o) {
+type IdentityFn = (o: any) => any;
+
+const identity: IdentityFn = function (o) {
   return o;
 };
 
-function stripTermEsc(str) {
+function stripTermEsc(str: string): string {
   return str.replace(/\u001b\[\d{1,2}m/g, '');
 }
 
-let opts = [
+const opts = [
   'code',
   'blockquote',
   'html',
@@ -28,12 +30,24 @@ let opts = [
   'href'
 ];
 
-let defaultOptions = {};
+interface MarkedTerminalOptions {
+  [key: string]: any;
+  tableOptions?: {
+    chars?: {
+      [key: string]: string;
+    };
+  };
+  reflowText?: boolean;
+  showSectionPrefix?: boolean;
+  width?: number;
+}
+
+const defaultOptions: MarkedTerminalOptions = {};
 opts.forEach(function (opt) {
   defaultOptions[opt] = identity;
 });
 
-let defaultOptions2 = {};
+const defaultOptions2: MarkedTerminalOptions = {};
 opts.forEach(function (opt) {
   defaultOptions[opt] = identity;
 });
@@ -45,7 +59,7 @@ defaultOptions.tableOptions = {
   chars: { top: '@@@@TABLE@@@@@' }
 };
 
-function markup(str, gfm = false) {
+function markup(str: string, gfm = false): string {
   marked.use(
     markedTerminal(defaultOptions2),
     { gfm }
@@ -60,14 +74,14 @@ describe('Renderer', function () {
 
   it('should render links', function () {
     marked.use(markedTerminal(defaultOptions));
-    let text = '[Google](http://google.com)';
-    let expected = 'Google (http://google.com)';
+    const text = '[Google](http://google.com)';
+    const expected = 'Google (http://google.com)';
     equal(marked(text).trim(), expected);
   });
 
   it('should pass on options to table', function () {
     marked.use(markedTerminal(defaultOptions));
-    let text =
+    const text =
       '| Lorem | Ipsum | Sit amet     | Dolar  |\n' +
       '|------|------|----------|----------|\n' +
       '| Row 1  | Value    | Value  | Value |\n' +
@@ -80,25 +94,25 @@ describe('Renderer', function () {
 
   it('should not show link href twice if link and url is equal', function () {
     marked.use(markedTerminal(defaultOptions));
-    let text = 'http://google.com';
+    const text = 'http://google.com';
     equal(marked(text).trim(), text);
   });
 
   it('should render html as html', function () {
     marked.use(markedTerminal(defaultOptions));
-    let html = '<strong>foo</strong>';
+    const html = '<strong>foo</strong>';
     equal(marked(html).trim(), html);
   });
 
   it('should not escape entities', function () {
     marked.use(markedTerminal(defaultOptions));
-    let text =
+    const text =
       '# This < is "foo". it\'s a & string\n' +
       '> This < is "foo". it\'s a & string\n\n' +
       'This < is **"foo"**. it\'s a & string\n' +
       'This < is "foo". it\'s a & string';
 
-    let expected =
+    const expected =
       '# This < is "foo". it\'s a & string\n\n' +
       '    This < is "foo". it\'s a & string\n\n' +
       'This < is "foo". it\'s a & string\n' +
@@ -108,20 +122,20 @@ describe('Renderer', function () {
 
   it('should not translate emojis inside codespans', function () {
     marked.use(markedTerminal(defaultOptions));
-    let markdownText = 'Some `:+1:`';
+    const markdownText = 'Some `:+1:`';
 
     notEqual(marked(markdownText).indexOf(':+1:'), -1);
   });
 
   it('should translate emojis', function () {
     marked.use(markedTerminal(defaultOptions));
-    let markdownText = 'Some :+1:';
+    const markdownText = 'Some :+1:';
     equal(marked(markdownText).indexOf(':+1'), -1);
   });
 
   it('should show default if not supported emojis', function () {
     marked.use(markedTerminal(defaultOptions));
-    let markdownText = 'Some :someundefined:';
+    const markdownText = 'Some :someundefined:';
     notEqual(
       marked(markdownText).indexOf(':someundefined:'),
       -1
@@ -130,7 +144,7 @@ describe('Renderer', function () {
 
   it('should not escape entities', function () {
     marked.use(markedTerminal(defaultOptions));
-    let markdownText =
+    const markdownText =
       'Usage | Syntax' +
       '\r\n' +
       '------|-------' +
@@ -141,32 +155,32 @@ describe('Renderer', function () {
   });
 
   it('should reflow paragraph and split words that are too long (one break)', function () {
-    let text = 'Now is the time: 01234567890\n';
-    let expected = 'Now is the\ntime: 0123\n4567890\n\n';
+    const text = 'Now is the time: 01234567890\n';
+    const expected = 'Now is the\ntime: 0123\n4567890\n\n';
     equal(markup(text), expected);
   });
 
   it('should reflow paragraph and split words that are too long (two breaks)', function () {
-    let text = 'Now is the time: http://timeanddate.com\n';
-    let expected = 'Now is the\ntime: http\n://timeand\ndate.com\n\n';
+    const text = 'Now is the time: http://timeanddate.com\n';
+    const expected = 'Now is the\ntime: http\n://timeand\ndate.com\n\n';
     equal(markup(text), expected);
   });
 
   it('should reflow paragraph', function () {
-    let text = 'Now is the time\n';
-    let expected = 'Now is the\ntime\n\n';
+    const text = 'Now is the time\n';
+    const expected = 'Now is the\ntime\n\n';
     equal(markup(text), expected);
   });
 
   it('should nuke section header', function () {
-    let text = '# Contents\n';
-    let expected = 'Contents\n\n';
+    const text = '# Contents\n';
+    const expected = 'Contents\n\n';
     equal(markup(text), expected);
   });
 
   it('should reflow and nuke section header', function () {
-    let text = '# Now is the time\n';
-    let expected = 'Now is the\ntime\n\n';
+    const text = '# Now is the time\n';
+    const expected = 'Now is the\ntime\n\n';
     equal(markup(text), expected);
   });
 
@@ -179,16 +193,16 @@ describe('Renderer', function () {
   // });
 
   it('should preserve line breaks (gfm)', function () {
-    let text = 'Now  \nis    \nthe<br />time\n';
-    let expected = 'Now\nis\nthe\ntime\n\n';
+    const text = 'Now  \nis    \nthe<br />time\n';
+    const expected = 'Now\nis\nthe\ntime\n\n';
     equal(markup(text, true), expected);
   });
 
   it('should render ordered and unordered list with same newlines', function () {
-    let ul = '* ul item\n' + '* ul item';
-    let ol = '1. ol item\n' + '2. ol item';
-    let before = '';
-    let after = '\n\n';
+    const ul = '* ul item\n' + '* ul item';
+    const ol = '1. ol item\n' + '2. ol item';
+    const before = '';
+    const after = '\n\n';
 
     equal(markup(ul), before + '    * ul item\n' + '    * ul item' + after);
 
@@ -196,12 +210,12 @@ describe('Renderer', function () {
   });
 
   it('should render nested lists', function () {
-    let ul = '* ul item\n' + '    * ul item';
-    let ol = '1. ol item\n' + '    1. ol item';
-    let olul = '1. ol item\n' + '    * ul item';
-    let ulol = '* ul item\n' + '    1. ol item';
-    let before = '';
-    let after = '\n\n';
+    const ul = '* ul item\n' + '    * ul item';
+    const ol = '1. ol item\n' + '    1. ol item';
+    const olul = '1. ol item\n' + '    * ul item';
+    const ulol = '* ul item\n' + '    1. ol item';
+    const before = '';
+    const after = '\n\n';
 
     equal(markup(ul), before + '    * ul item\n' + '        * ul item' + after);
 
@@ -222,9 +236,9 @@ describe('Renderer', function () {
   });
 
   it('should render task items', function () {
-    let tasks = '* [ ] task item\n' + '* [X] task item';
-    let before = '';
-    let after = '\n\n';
+    const tasks = '* [ ] task item\n' + '* [X] task item';
+    const before = '';
+    const after = '\n\n';
 
     equal(
       markup(tasks),

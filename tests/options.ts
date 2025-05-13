@@ -2,11 +2,13 @@ import { notEqual, equal } from 'assert';
 import Renderer from '../index.js';
 import marked, { resetMarked } from './_marked.js';
 
-var identity = function (o) {
+type IdentityFn = (o: any) => any;
+
+const identity: IdentityFn = function (o) {
   return o;
 };
 
-var opts = [
+const opts = [
   'code',
   'blockquote',
   'html',
@@ -24,7 +26,14 @@ var opts = [
   'href'
 ];
 
-var defaultOptions = {};
+interface RendererOptions {
+  [key: string]: any;
+  emoji?: boolean;
+  tab?: number | string;
+  image?: (text: string, options?: any) => string;
+}
+
+const defaultOptions: RendererOptions = {};
 opts.forEach(function (opt) {
   defaultOptions[opt] = identity;
 });
@@ -32,14 +41,14 @@ opts.forEach(function (opt) {
 defaultOptions.emoji = false;
 
 describe('Options', function () {
-  var r = new Renderer(defaultOptions);
+  const r = new Renderer(defaultOptions);
 
   beforeEach(function () {
     resetMarked();
   });
 
   it('should not translate emojis', function () {
-    var markdownText = 'Some :emoji:';
+    const markdownText = 'Some :emoji:';
 
     notEqual(
       marked(markdownText, {
@@ -50,58 +59,58 @@ describe('Options', function () {
   });
 
   it('should change tabs by space size', function () {
-    var options = Object.assign({}, defaultOptions, { tab: 4 });
-    var r = new Renderer(options);
+    const options = Object.assign({}, defaultOptions, { tab: 4 });
+    const r = new Renderer(options);
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText, { renderer: r }), '    Blockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText, { renderer: r }), '    * List Item\n\n');
   });
 
   it('should use default tabs if passing not supported string', function () {
-    var options = Object.assign({}, defaultOptions, { tab: 'dsakdskajhdsa' });
-    var r = new Renderer(options);
+    const options = Object.assign({}, defaultOptions, { tab: 'dsakdskajhdsa' });
+    const r = new Renderer(options);
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText, { renderer: r }), '    Blockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText, { renderer: r }), '    * List Item\n\n');
   });
 
   it('should change tabs by allowed characters', function () {
-    var options = Object.assign({}, defaultOptions, { tab: '\t' });
-    var r = new Renderer(options);
+    const options = Object.assign({}, defaultOptions, { tab: '\t' });
+    const r = new Renderer(options);
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText, { renderer: r }), '\tBlockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText, { renderer: r }), '\t* List Item\n\n');
   });
 
   it('should support mulitple tab characters', function () {
-    var options = Object.assign({}, defaultOptions, { tab: '\t\t' });
-    var r = new Renderer(options);
+    const options = Object.assign({}, defaultOptions, { tab: '\t\t' });
+    const r = new Renderer(options);
 
-    var blockquoteText = '> Blockquote';
+    const blockquoteText = '> Blockquote';
     equal(marked(blockquoteText, { renderer: r }), '\t\tBlockquote\n\n');
 
-    var listText = '* List Item';
+    const listText = '* List Item';
     equal(marked(listText, { renderer: r }), '\t\t* List Item\n\n');
   });
 
   it('should support overriding image handling', function () {
-    var options = Object.assign({}, defaultOptions, {
-      image: function () {
+    const options = Object.assign({}, defaultOptions, {
+      image: function (): string {
         return 'IMAGE';
       }
     });
-    var r = new Renderer(options);
+    const r = new Renderer(options);
 
-    var text = `
+    const text = `
 # Title
 ![Alt text](./img.jpg)`;
     equal(
