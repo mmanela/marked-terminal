@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node", 
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "strict": true, 
+    "forceConsistentCasingInFileNames": true,
+		"skipDefaultLibCheck": true,
+		"strictNullChecks": true,
+		"noErrorTruncation": true,
+		"resolveJsonModule": true,
+		"noUnusedLocals": true,
+		"composite": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"noUncheckedIndexedAccess": true,
+  },
+  "include": ["index.ts", "supports-color.ts", "supports-hyperlinks.ts"],
+  "exclude": ["node_modules", "dist"]
+}
