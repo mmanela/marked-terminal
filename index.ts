@@ -7,6 +7,7 @@ import { highlight as highlightCli } from 'cli-highlight';
 import Table from 'cli-table3';
 import * as emoji from 'node-emoji';
 import supportsHyperlinks from './supports-hyperlinks.js'; 
+import { Parser, Tokens } from 'marked';
 
 // Type definitions
 type ChalkFunction = (text: string) => string;
@@ -43,36 +44,6 @@ interface RendererOptions {
 interface HighlightOptions {
     language?: string;
     [key: string]: any;
-}
-
-interface TableRow {
-    text: string;
-}
-
-interface Token {
-    type: string;
-    raw?: string;
-    text?: string;
-    tokens?: Token[];
-    depth?: number;
-    lang?: string;
-    escaped?: boolean;
-    ordered?: boolean;
-    start?: number;
-    loose?: boolean;
-    items?: any[];
-    header?: any[];
-    rows?: any[][];
-    checked?: boolean;
-    task?: boolean;
-    href?: string;
-    title?: string;
-}
-
-interface Parser {
-    parse: (tokens: Token[] | string, loose?: boolean) => string;
-    parseInline: (tokens: Token[]) => string;
-    options: any;
 }
 
 const TABLE_CELL_SPLIT = '^*||*^';
@@ -147,7 +118,7 @@ class Renderer {
             parse: () => "",
             parseInline: () => "",
             options: {}
-        }
+        } as any
 
     }
 
@@ -161,14 +132,14 @@ class Renderer {
         return '';
     }
 
-    text(text: string | Token): string {
+    text(text: Tokens.Text | Tokens.Escape | string): string {
         if (typeof text === 'object') {
             text = text.text || '';
         }
         return this.o.text(text);
     }
 
-    code(code: string | Token, lang?: string, escaped?: boolean): string {
+    code(code: string | Tokens.Code, lang?: string, escaped?: boolean): string {
         if (typeof code === 'object') {
             lang = code.lang;
             escaped = !!code.escaped;
@@ -179,21 +150,21 @@ class Renderer {
         );
     }
 
-    blockquote(quote: string | Token): string {
+    blockquote(quote: string | Tokens.Blockquote): string {
         if (typeof quote === 'object') {
-            quote = this.parser.parse(quote.tokens || '');
+            quote = this.parser.parse(quote.tokens || []);
         }
         return section(this.o.blockquote(indentify(this.tab, quote.trim())));
     }
 
-    html(html: string | Token): string {
+    html(html: string | Tokens.HTML): string {
         if (typeof html === 'object') {
             html = html.text || '';
         }
         return this.o.html(html);
     }
 
-    heading(text: string | Token, level?: number): string {
+    heading(text: string | Tokens.Heading, level?: number): string {
         if (typeof text === 'object') {
             level = text.depth;
             text = this.parser.parseInline(text.tokens || []);
@@ -216,21 +187,21 @@ class Renderer {
         return section(this.o.hr(hr('-', this.o.reflowText ? this.o.width : undefined)));
     }
 
-    list(body: string | Token, ordered?: boolean): string {
+    list(body: string | Tokens.List, ordered?: boolean): string {
         if (typeof body === 'object') {
             const listToken = body;
 
             ordered = listToken.ordered;
             body = '';
             for (let j = 0; j < (listToken.items?.length || 0); j++) {
-                body += this.listitem(listToken.items![j]);
+                body += this.listitem(listToken.items[j]!);
             }
         }
         body = this.o.list(body as string, ordered || false, this.tab);
         return section(fixNestedLists(indentLines(this.tab, body), this.tab));
     }
 
-    listitem(text: string | Token): string {
+    listitem(text: string | Tokens.ListItem): string {
         if (typeof text === 'object') {
             const item = text;
             text = '';
@@ -271,14 +242,14 @@ class Renderer {
         return '\n' + BULLET_POINT + transform(text);
     }
 
-    checkbox(checked: boolean | { checked: boolean }): string {
+    checkbox(checked: boolean | Tokens.Checkbox): string {
         if (typeof checked === 'object') {
             checked = checked.checked;
         }
         return '[' + (checked ? 'X' : ' ') + '] ';
     }
 
-    paragraph(text: string | Token): string {
+    paragraph(text: string | Tokens.Paragraph): string {
         if (typeof text === 'object') {
             text = this.parser.parseInline(text.tokens || []);
         }
@@ -290,7 +261,7 @@ class Renderer {
         return section(text);
     }
 
-    table(header: string | Token, body?: string): string {
+    table(header: string | Tokens.Table, body?: string): string {
         if (typeof header === 'object') {
             const token = header;
             header = '';
@@ -298,7 +269,7 @@ class Renderer {
             // header
             let cell = '';
             for (let j = 0; j < (token.header?.length || 0); j++) {
-                cell += this.tablecell(token.header![j]);
+                cell += this.tablecell(token.header![j]!);
             }
             header += this.tablerow({ text: cell });
 
@@ -308,7 +279,7 @@ class Renderer {
 
                 cell = '';
                 for (let k = 0; k < row.length; k++) {
-                    cell += this.tablecell(row[k]);
+                    cell += this.tablecell(row[k]!);
                 }
 
                 body! += this.tablerow({ text: cell });
@@ -330,14 +301,14 @@ class Renderer {
         return section(this.o.table(table.toString()));
     }
 
-    tablerow(content: string | TableRow): string {
+    tablerow(content: string | Tokens.TableRow): string {
         if (typeof content === 'object') {
             content = content.text;
         }
         return TABLE_ROW_WRAP + content + TABLE_ROW_WRAP + '\n';
     }
 
-    tablecell(content: string | Token): string {
+    tablecell(content: string | Tokens.TableCell): string {
         if (typeof content === 'object') {
             content = this.parser.parseInline(content.tokens || []);
         }
@@ -345,14 +316,14 @@ class Renderer {
     }
 
     // span level renderer
-    strong(text: string | Token): string {
+    strong(text: string | Tokens.Strong): string {
         if (typeof text === 'object') {
             text = this.parser.parseInline(text.tokens || []);
         }
         return this.o.strong(text as string);
     }
 
-    em(text: string | Token): string {
+    em(text: string | Tokens.Em): string {
         if (typeof text === 'object') {
             text = this.parser.parseInline(text.tokens || []);
         }
@@ -360,7 +331,7 @@ class Renderer {
         return this.o.em(text as string);
     }
 
-    codespan(text: string | Token): string {
+    codespan(text: string | Tokens.Codespan): string {
         if (typeof text === 'object') {
             text = text.text || '';
         }
@@ -372,14 +343,14 @@ class Renderer {
         return this.o.reflowText ? HARD_RETURN : '\n';
     }
 
-    del(text: string | Token): string {
+    del(text: string | Tokens.Del): string {
         if (typeof text === 'object') {
             text = this.parser.parseInline(text.tokens || []);
         }
         return this.o.del(text as string);
     }
 
-    link(href: string | Token, title?: string | null, text?: string): string {
+    link(href: string | Tokens.Link, title?: string | null, text?: string): string {
         if (typeof href === 'object') {
             title = href.title || null;
             text = this.parser.parseInline(href.tokens || []);
@@ -424,7 +395,7 @@ class Renderer {
         return this.o.link(out);
     }
 
-    image(href: string | Token, title?: string | null, text?: string): string {
+    image(href: string | Tokens.Image, title?: string | null, text?: string): string {
         if (typeof href === 'object') {
             title = href.title || null;
             text = href.text || '';

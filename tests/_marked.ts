@@ -1,6 +1,4 @@
-import * as m from 'marked';
-
-const marked = 'marked' in m ? m.marked : m.default;
+import { marked } from 'marked';
 
 resetMarked();
 
@@ -11,9 +9,6 @@ export function resetMarked(): void {
 
   if ('use' in marked) {
     // Test wrapper to handle v5 with breaking changes
-    marked.use({
-      mangle: false,
-      headerIds: false
-    });
+    marked.use({ });
   }
 }

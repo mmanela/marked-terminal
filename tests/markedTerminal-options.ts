@@ -1,6 +1,6 @@
 import { notEqual, equal } from 'assert';
-import { markedTerminal } from '../index.js';
-import marked, { resetMarked } from './_marked.js';
+import { markedTerminal } from '../index';
+import marked, { resetMarked } from './_marked';
 
 type IdentityFn = (o: any) => any;
 

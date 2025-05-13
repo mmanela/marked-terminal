@@ -13,7 +13,7 @@
 		"noErrorTruncation": true,
 		"resolveJsonModule": true,
 		"noUnusedLocals": true,
-		"composite": true,
+		"composite": true, 
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"noUncheckedIndexedAccess": true,

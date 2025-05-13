@@ -1,8 +1,8 @@
 import { equal } from 'assert';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
-import { markedTerminal } from '../index.js';
-import marked, { resetMarked } from './_marked.js';
+import { markedTerminal } from '../index';
+import marked, { resetMarked } from './_marked';
 import { fileURLToPath } from 'url';
 
 type IdentityFn = (o: any) => any;
@@ -53,7 +53,7 @@ opts.forEach(function (opt) {
 
 function markup(str: string): string {
   marked.use(markedTerminal(defaultOptions));
-  return stripTermEsc(marked(str));
+  return stripTermEsc(marked(str, { async: false }));
 }
 
 describe('e2', function () {
