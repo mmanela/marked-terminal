@@ -1,8 +1,9 @@
 import { equal } from 'assert';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
-import { markedTerminal } from '../index';
-import marked, { resetMarked } from './_marked';
+// @ts-ignore
+import { markedTerminal } from '../dist/index.js';
+import marked, { resetMarked } from './_marked.js';
 import { fileURLToPath } from 'url';
 
 type IdentityFn = (o: any) => any;

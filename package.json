@@ -16,14 +16,15 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
     "prepack": "npm run build",
-    "test": "cross-env FORCE_HYPERLINK=0 mocha tests/markedTerminal-*.ts tests/e2e.ts --loader=ts-node/esm --reporter spec"
+    "test": "cross-env FORCE_HYPERLINK=0 mocha --require=ts-node/register --loader=ts-node/esm tests/markedTerminal-*.ts tests/e2e.ts --reporter spec"
   },
   "files": [
     "dist"
   ],
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "keywords": [
     "marked",
     "render",
@@ -44,10 +45,7 @@
     "cli-table3": "^0.6.5",
     "node-emoji": "^2.2.0",
 		"has-flag": "^5.0.1"
-  },
-  "directories": {
-    "example": "example"
-  },
+  }, 
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.10.0",

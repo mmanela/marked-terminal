@@ -1,5 +1,5 @@
 import * as process from 'process';
-import {createSupportsColor} from './supports-color';
+import {createSupportsColor} from './supports-color.js';
 import hasFlag from 'has-flag';
 
 interface VersionInfo {

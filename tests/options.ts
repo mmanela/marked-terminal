@@ -1,6 +1,7 @@
 import { notEqual, equal } from 'assert';
-import Renderer from '../index';
-import marked, { resetMarked } from './_marked';
+// @ts-ignore
+import Renderer from '../dist/index.js';
+import marked, { resetMarked } from './_marked.js';
 
 type IdentityFn = (o: any) => any;
 
@@ -52,7 +53,8 @@ describe('Options', function () {
 
     notEqual(
       marked(markdownText, {
-        renderer: r
+        renderer: r,
+        async: false
       }).indexOf(':emoji:'),
       -1
     );

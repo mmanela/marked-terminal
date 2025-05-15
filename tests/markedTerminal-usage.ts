@@ -1,6 +1,7 @@
 import { equal, notEqual } from 'assert';
-import { markedTerminal } from '../index';
-import marked, { resetMarked } from './_marked';
+// @ts-ignore
+import { markedTerminal } from '../dist/index.js';
+import marked, { resetMarked } from './_marked.js';
 
 type IdentityFn = (o: any) => any;
 
@@ -64,7 +65,7 @@ function markup(str: string, gfm = false): string {
     markedTerminal(defaultOptions2),
     { gfm }
   )
-  return stripTermEsc(marked(str));
+  return stripTermEsc(marked(str, { async: false }));
 }
 
 describe('Renderer', function () {
@@ -76,7 +77,7 @@ describe('Renderer', function () {
     marked.use(markedTerminal(defaultOptions));
     const text = '[Google](http://google.com)';
     const expected = 'Google (http://google.com)';
-    equal(marked(text).trim(), expected);
+    equal(marked(text, { async: false }).trim(), expected);
   });
 
   it('should pass on options to table', function () {
@@ -89,19 +90,19 @@ describe('Renderer', function () {
       '| Row 3  | Value    | Value  | Value |\n' +
       '| Row 4  | Value    | Value  | Value |';
 
-    notEqual(marked(text).indexOf('@@@@TABLE@@@@@'), -1);
+    notEqual(marked(text, { async: false }).indexOf('@@@@TABLE@@@@@'), -1);
   });
 
   it('should not show link href twice if link and url is equal', function () {
     marked.use(markedTerminal(defaultOptions));
     const text = 'http://google.com';
-    equal(marked(text).trim(), text);
+    equal(marked(text, { async: false }).trim(), text);
   });
 
   it('should render html as html', function () {
     marked.use(markedTerminal(defaultOptions));
     const html = '<strong>foo</strong>';
-    equal(marked(html).trim(), html);
+    equal(marked(html, { async: false }).trim(), html);
   });
 
   it('should not escape entities', function () {
@@ -117,27 +118,27 @@ describe('Renderer', function () {
       '    This < is "foo". it\'s a & string\n\n' +
       'This < is "foo". it\'s a & string\n' +
       'This < is "foo". it\'s a & string';
-    equal(marked(text).trim(), expected);
+    equal(marked(text, { async: false }).trim(), expected);
   });
 
   it('should not translate emojis inside codespans', function () {
     marked.use(markedTerminal(defaultOptions));
     const markdownText = 'Some `:+1:`';
 
-    notEqual(marked(markdownText).indexOf(':+1:'), -1);
+    notEqual(marked(markdownText, { async: false }).indexOf(':+1:'), -1);
   });
 
   it('should translate emojis', function () {
     marked.use(markedTerminal(defaultOptions));
     const markdownText = 'Some :+1:';
-    equal(marked(markdownText).indexOf(':+1'), -1);
+    equal(marked(markdownText, { async: false }).indexOf(':+1'), -1);
   });
 
   it('should show default if not supported emojis', function () {
     marked.use(markedTerminal(defaultOptions));
     const markdownText = 'Some :someundefined:';
     notEqual(
-      marked(markdownText).indexOf(':someundefined:'),
+      marked(markdownText, { async: false }).indexOf(':someundefined:'),
       -1
     );
   });
@@ -151,7 +152,7 @@ describe('Renderer', function () {
       '\r\n' +
       'General |`$ shell <CommandParam>`';
 
-    notEqual(marked(markdownText).indexOf('<CommandParam>'), -1);
+    notEqual(marked(markdownText, { async: false }).indexOf('<CommandParam>'), -1);
   });
 
   it('should reflow paragraph and split words that are too long (one break)', function () {

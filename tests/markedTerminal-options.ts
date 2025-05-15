@@ -1,6 +1,7 @@
 import { notEqual, equal } from 'assert';
-import { markedTerminal } from '../index';
-import marked, { resetMarked } from './_marked';
+// @ts-ignore
+import { markedTerminal } from '../dist/index.js';
+import marked, { resetMarked } from './_marked.js';
 
 type IdentityFn = (o: any) => any;
 
@@ -50,7 +51,7 @@ describe('Options', function () {
     const markdownText = 'Some :emoji:';
 
     notEqual(
-      marked(markdownText).indexOf(':emoji:'),
+      marked(markdownText, { async: false }).indexOf(':emoji:'),
       -1
     );
   });
@@ -60,10 +61,10 @@ describe('Options', function () {
     marked.use(markedTerminal(options));
 
     const blockquoteText = '> Blockquote';
-    equal(marked(blockquoteText), '    Blockquote\n\n');
+    equal(marked(blockquoteText, { async: false }), '    Blockquote\n\n');
 
     const listText = '* List Item';
-    equal(marked(listText), '    * List Item\n\n');
+    equal(marked(listText, { async: false }), '    * List Item\n\n');
   });
 
   it('should use default tabs if passing not supported string', function () {
@@ -71,10 +72,10 @@ describe('Options', function () {
     marked.use(markedTerminal(options));
 
     const blockquoteText = '> Blockquote';
-    equal(marked(blockquoteText), '    Blockquote\n\n');
+    equal(marked(blockquoteText, { async: false }), '    Blockquote\n\n');
 
     const listText = '* List Item';
-    equal(marked(listText), '    * List Item\n\n');
+    equal(marked(listText, { async: false }), '    * List Item\n\n');
   });
 
   it('should change tabs by allowed characters', function () {
@@ -82,10 +83,10 @@ describe('Options', function () {
     marked.use(markedTerminal(options));
 
     const blockquoteText = '> Blockquote';
-    equal(marked(blockquoteText), '\tBlockquote\n\n');
+    equal(marked(blockquoteText, { async: false }), '\tBlockquote\n\n');
 
     const listText = '* List Item';
-    equal(marked(listText), '\t* List Item\n\n');
+    equal(marked(listText, { async: false }), '\t* List Item\n\n');
   });
 
   it('should support mulitple tab characters', function () {
@@ -93,10 +94,10 @@ describe('Options', function () {
     marked.use(markedTerminal(options));
 
     const blockquoteText = '> Blockquote';
-    equal(marked(blockquoteText), '\t\tBlockquote\n\n');
+    equal(marked(blockquoteText, { async: false }), '\t\tBlockquote\n\n');
 
     const listText = '* List Item';
-    equal(marked(listText), '\t\t* List Item\n\n');
+    equal(marked(listText, { async: false }), '\t\t* List Item\n\n');
   });
 
   it('should support overriding image handling', function () {
@@ -111,7 +112,7 @@ describe('Options', function () {
 # Title
 ![Alt text](./img.jpg)`;
     equal(
-      marked(text),
+      marked(text, { async: false }),
       `# Title
 
 IMAGE

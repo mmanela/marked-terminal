@@ -132,54 +132,44 @@ class Renderer {
         return '';
     }
 
-    text(text: Tokens.Text | Tokens.Escape | string): string {
-        if (typeof text === 'object') {
-            text = text.text || '';
-        }
-        return this.o.text(text);
+    text(text: Tokens.Text | Tokens.Escape): string {
+        const textStr = text.text || '';
+        return this.o.text(textStr);
     }
 
-    code(code: string | Tokens.Code, lang?: string, escaped?: boolean): string {
-        if (typeof code === 'object') {
-            lang = code.lang;
-            escaped = !!code.escaped;
-            code = code.text || '';
-        }
+    code(code: Tokens.Code): string {
+        const lang = code.lang;
+        // Note: escaped is available on the token but not used in this implementation
+        const codeStr = code.text || '';
         return section(
-            indentify(this.tab, highlight(code, lang, this.o, this.highlightOptions))
+            indentify(this.tab, highlight(codeStr, lang, this.o, this.highlightOptions))
         );
     }
 
-    blockquote(quote: string | Tokens.Blockquote): string {
-        if (typeof quote === 'object') {
-            quote = this.parser.parse(quote.tokens || []);
-        }
-        return section(this.o.blockquote(indentify(this.tab, quote.trim())));
+    blockquote(quote: Tokens.Blockquote): string {
+        const quoteStr = this.parser.parse(quote.tokens || []);
+        return section(this.o.blockquote(indentify(this.tab, quoteStr.trim())));
     }
 
-    html(html: string | Tokens.HTML): string {
-        if (typeof html === 'object') {
-            html = html.text || '';
-        }
-        return this.o.html(html);
+    html(html: Tokens.HTML): string {
+        const htmlStr = html.text || '';
+        return this.o.html(htmlStr);
     }
 
-    heading(text: string | Tokens.Heading, level?: number): string {
-        if (typeof text === 'object') {
-            level = text.depth;
-            text = this.parser.parseInline(text.tokens || []);
-        }
-        text = this.transform(text);
+    heading(text: Tokens.Heading): string {
+        const level = text.depth;
+        let textStr = this.parser.parseInline(text.tokens || []);
+        textStr = this.transform(textStr);
 
         const prefix = this.o.showSectionPrefix
-            ? new Array(level! + 1).join('#') + ' '
+            ? new Array(level + 1).join('#') + ' '
             : '';
-        text = prefix + text;
+        textStr = prefix + textStr;
         if (this.o.reflowText) {
-            text = reflowText(text, this.o.width, this.options?.gfm);
+            textStr = reflowText(textStr, this.o.width, this.options?.gfm);
         }
         return section(
-            level === 1 ? this.o.firstHeading(text) : this.o.heading(text)
+            level === 1 ? this.o.firstHeading(textStr) : this.o.heading(textStr)
         );
     }
 
@@ -187,154 +177,132 @@ class Renderer {
         return section(this.o.hr(hr('-', this.o.reflowText ? this.o.width : undefined)));
     }
 
-    list(body: string | Tokens.List, ordered?: boolean): string {
-        if (typeof body === 'object') {
-            const listToken = body;
-
-            ordered = listToken.ordered;
-            body = '';
-            for (let j = 0; j < (listToken.items?.length || 0); j++) {
-                body += this.listitem(listToken.items[j]!);
-            }
+    list(listToken: Tokens.List): string {
+        const ordered = listToken.ordered;
+        let bodyStr = '';
+        for (let j = 0; j < (listToken.items?.length || 0); j++) {
+            bodyStr += this.listitem(listToken.items[j]!);
         }
-        body = this.o.list(body as string, ordered || false, this.tab);
-        return section(fixNestedLists(indentLines(this.tab, body), this.tab));
+        
+        bodyStr = this.o.list(bodyStr, ordered || false, this.tab);
+        return section(fixNestedLists(indentLines(this.tab, bodyStr), this.tab));
     }
 
-    listitem(text: string | Tokens.ListItem): string {
-        if (typeof text === 'object') {
-            const item = text;
-            text = '';
-            if (item.task) {
-                const checkbox = this.checkbox({ checked: !!item.checked });
-                if (item.loose) {
-                    if (item.tokens && item.tokens.length > 0  && item.tokens[0] && item.tokens[0].type === 'paragraph') {
-                        item.tokens[0].text = checkbox + ' ' + (item.tokens[0].text || '');
-                        if (
-                            item.tokens[0].tokens &&
-                            item.tokens[0].tokens.length > 0 &&
-                            item.tokens[0].tokens[0] &&
-                            item.tokens[0].tokens[0].type === 'text'
-                        ) {
-                            item.tokens[0].tokens[0].text =
-                                checkbox + ' ' + (item.tokens[0].tokens[0].text || '');
-                        }
-                    } else {
-                        item.tokens = item.tokens || [];
-                        item.tokens.unshift({
-                            type: 'text',
-                            raw: checkbox + ' ',
-                            text: checkbox + ' '
-                        });
+    listitem(item: Tokens.ListItem): string {
+        let textStr = '';
+        if (item.task) {
+            const checkboxStr = '[' + (item.checked ? 'X' : ' ') + '] ';
+            if (item.loose) {
+                if (item.tokens && item.tokens.length > 0  && item.tokens[0] && item.tokens[0].type === 'paragraph') {
+                    item.tokens[0].text = checkboxStr + ' ' + (item.tokens[0].text || '');
+                    if (
+                        item.tokens[0].tokens &&
+                        item.tokens[0].tokens.length > 0 &&
+                        item.tokens[0].tokens[0] &&
+                        item.tokens[0].tokens[0].type === 'text'
+                    ) {
+                        item.tokens[0].tokens[0].text =
+                            checkboxStr + ' ' + (item.tokens[0].tokens[0].text || '');
                     }
                 } else {
-                    text += checkbox + ' ';
+                    item.tokens = item.tokens || [];
+                    item.tokens.unshift({
+                        type: 'text',
+                        raw: checkboxStr + ' ',
+                        text: checkboxStr + ' '
+                    });
                 }
+            } else {
+                textStr += checkboxStr;
             }
-
-            text += this.parser.parse(item.tokens || [], !!item.loose);
         }
+
+        textStr += this.parser.parse(item.tokens || [], !!item.loose);
+        
         const transform = compose(this.o.listitem, this.transform);
-        const isNested = text.indexOf('\n') !== -1;
-        if (isNested) text = text.trim();
+        const isNested = textStr.indexOf('\n') !== -1;
+        if (isNested) textStr = textStr.trim();
 
         // Use BULLET_POINT as a marker for ordered or unordered list item
-        return '\n' + BULLET_POINT + transform(text);
+        return '\n' + BULLET_POINT + transform(textStr);
     }
 
-    checkbox(checked: boolean | Tokens.Checkbox): string {
-        if (typeof checked === 'object') {
-            checked = checked.checked;
-        }
+    checkbox(checkbox: Tokens.Checkbox): string {
+        const checked = checkbox.checked;
         return '[' + (checked ? 'X' : ' ') + '] ';
     }
 
-    paragraph(text: string | Tokens.Paragraph): string {
-        if (typeof text === 'object') {
-            text = this.parser.parseInline(text.tokens || []);
-        }
+    paragraph(paragraph: Tokens.Paragraph): string {
+        let textStr = this.parser.parseInline(paragraph.tokens || []);
         const transform = compose(this.o.paragraph, this.transform);
-        text = transform(text);
+        textStr = transform(textStr);
         if (this.o.reflowText) {
-            text = reflowText(text, this.o.width, this.options?.gfm);
+            textStr = reflowText(textStr, this.o.width, this.options?.gfm);
         }
-        return section(text);
+        return section(textStr);
     }
 
-    table(header: string | Tokens.Table, body?: string): string {
-        if (typeof header === 'object') {
-            const token = header;
-            header = '';
+    table(token: Tokens.Table): string {
+        let headerStr = '';
 
-            // header
-            let cell = '';
-            for (let j = 0; j < (token.header?.length || 0); j++) {
-                cell += this.tablecell(token.header![j]!);
+        // header
+        let cell = '';
+        for (let j = 0; j < (token.header?.length || 0); j++) {
+            cell += this.tablecell(token.header![j]!);
+        }
+        headerStr += this.tablerow({ text: cell });
+
+        let bodyStr = '';
+        for (let j = 0; j < (token.rows?.length || 0); j++) {
+            const row = token.rows![j]!;
+
+            cell = '';
+            for (let k = 0; k < row.length; k++) {
+                cell += this.tablecell(row[k]!);
             }
-            header += this.tablerow({ text: cell });
 
-            body = '';
-            for (let j = 0; j < (token.rows?.length || 0); j++) {
-                const row = token.rows![j]!;
-
-                cell = '';
-                for (let k = 0; k < row.length; k++) {
-                    cell += this.tablecell(row[k]!);
-                }
-
-                body! += this.tablerow({ text: cell });
-            }
+            bodyStr += this.tablerow({ text: cell });
         }
         const table = new Table(
             Object.assign(
                 {},
                 {
-                    head: generateTableRow(header as string)[0]
+                    head: generateTableRow(headerStr)[0]
                 },
                 this.tableSettings
             )
         );
 
-        generateTableRow(body || '', this.transform).forEach(function (row) {
+        generateTableRow(bodyStr, this.transform).forEach(function (row) {
             table.push(row);
         });
         return section(this.o.table(table.toString()));
     }
 
-    tablerow(content: string | Tokens.TableRow): string {
-        if (typeof content === 'object') {
-            content = content.text;
-        }
+    tablerow(row: Tokens.TableRow): string {
+        const content = row.text;
         return TABLE_ROW_WRAP + content + TABLE_ROW_WRAP + '\n';
     }
 
-    tablecell(content: string | Tokens.TableCell): string {
-        if (typeof content === 'object') {
-            content = this.parser.parseInline(content.tokens || []);
-        }
+    tablecell(cell: Tokens.TableCell): string {
+        const content = this.parser.parseInline(cell.tokens || []);
         return content + TABLE_CELL_SPLIT;
     }
 
     // span level renderer
-    strong(text: string | Tokens.Strong): string {
-        if (typeof text === 'object') {
-            text = this.parser.parseInline(text.tokens || []);
-        }
-        return this.o.strong(text as string);
+    strong(strong: Tokens.Strong): string {
+        const text = this.parser.parseInline(strong.tokens || []);
+        return this.o.strong(text);
     }
 
-    em(text: string | Tokens.Em): string {
-        if (typeof text === 'object') {
-            text = this.parser.parseInline(text.tokens || []);
-        }
-        text = fixHardReturn(text as string, this.o.reflowText);
-        return this.o.em(text as string);
+    em(em: Tokens.Em): string {
+        let text = this.parser.parseInline(em.tokens || []);
+        text = fixHardReturn(text, this.o.reflowText);
+        return this.o.em(text);
     }
 
-    codespan(text: string | Tokens.Codespan): string {
-        if (typeof text === 'object') {
-            text = text.text || '';
-        }
+    codespan(codespan: Tokens.Codespan): string {
+        let text = codespan.text || '';
         text = fixHardReturn(text, this.o.reflowText);
         return this.o.codespan(text.replace(/:/g, COLON_REPLACER));
     }
@@ -343,23 +311,19 @@ class Renderer {
         return this.o.reflowText ? HARD_RETURN : '\n';
     }
 
-    del(text: string | Tokens.Del): string {
-        if (typeof text === 'object') {
-            text = this.parser.parseInline(text.tokens || []);
-        }
-        return this.o.del(text as string);
+    del(del: Tokens.Del): string {
+        const text = this.parser.parseInline(del.tokens || []);
+        return this.o.del(text);
     }
 
-    link(href: string | Tokens.Link, title?: string | null, text?: string): string {
-        if (typeof href === 'object') {
-            title = href.title || null;
-            text = this.parser.parseInline(href.tokens || []);
-            href = href.href || '';
-        }
+    link(link: Tokens.Link): string {
+        // Note: title is available on the token but not used in this implementation
+        const text = this.parser.parseInline(link.tokens || []);
+        const href = link.href || '';
 
         if (this.options?.sanitize) {
             try {
-                const prot = decodeURIComponent(unescape(href as string))
+                const prot = decodeURIComponent(unescape(href))
                     .replace(/[^\w:]/g, '')
                     .toLowerCase();
                 if (prot.indexOf('javascript:') === 0) {
@@ -379,31 +343,29 @@ class Renderer {
             if (text) {
                 link = this.o.href(this.emoji(text));
             } else {
-                link = this.o.href(href as string);
+                link = this.o.href(href);
             }
             out = ansiEscapes.link(
                 link,
-                (href as string)
+                href
                     // textLength breaks on '+' in URLs
                     .replace(/\+/g, '%20')
             );
         } else {
             if (hasText) out += this.emoji(text || '') + ' (';
-            out += this.o.href(href as string);
+            out += this.o.href(href);
             if (hasText) out += ')';
         }
         return this.o.link(out);
     }
 
-    image(href: string | Tokens.Image, title?: string | null, text?: string): string {
-        if (typeof href === 'object') {
-            title = href.title || null;
-            text = href.text || '';
-            href = href.href || '';
-        }
+    image(image: Tokens.Image): string {
+        const title = image.title || null;
+        const text = image.text || '';
+        const href = image.href || '';
 
         if (typeof this.o.image === 'function') {
-            return this.o.image(href as string, title || null, text || '');
+            return this.o.image(href, title, text);
         }
         let out = '![' + text;
         if (title) out += ' – ' + title;
